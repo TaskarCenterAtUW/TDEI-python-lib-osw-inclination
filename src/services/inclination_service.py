@@ -62,7 +62,8 @@ class InclinationService:
         response_message = {
             'status': 'Success' if valid else 'Failed',
             'success': valid,
-            'file_path': file_path
+            'file_url': request_message.data.file_url,
+            'updated_file_url': file_path
         }
         Logger.info(
             f' Publishing new message with ID: {request_message.messageId} with status: {valid}')
