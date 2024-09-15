@@ -111,7 +111,7 @@ Make sure you have set up the project properly before running the tests, see abo
 #### How to run unit test cases
 1. `.env` file is not required for Unit test cases.
 2To run the coverage
-   1. `python -m coverage run --source=src -m unittest discover -s tests/unit_tests`
+   1. `python -m coverage run --source=src -m unittest discover -s tests`
    2. Above command will run all the unit test cases.
    3. To generate the coverage report in console
       1. `coverage report`
