@@ -1,0 +1,9 @@
+python-ms-core~=0.0.22
+fastapi
+uvicorn
+pydantic-settings
+pyproj
+networkx
+shapely
+rasterio
+scipy
