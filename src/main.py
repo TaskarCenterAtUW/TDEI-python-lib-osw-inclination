@@ -55,7 +55,6 @@ async def shutdown_event() -> None:
 @app.get('/', status_code=status.HTTP_200_OK)
 @prefix_router.get('/', status_code=status.HTTP_200_OK)
 def root():
-    Inclination().calculate()
     return "I'm healthy !!"
 
 
