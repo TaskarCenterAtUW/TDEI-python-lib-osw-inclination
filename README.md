@@ -196,7 +196,7 @@ class DEMDownloader:
         dem_dir = self.get_dem_dir()
         return [Path(tif).stem for tif in dem_dir.glob('*.tif') if Path(tif).stem in self.ned_13_index]
 ```
-**NOTE:** ned_13_index.json file contains the index of all the DEM files available in the NED database. You can download the DEM files by providing the tile name can be found [here](https://github.com/TaskarCenterAtUW/TDEI-python-lib-osw-inclination/blob/main/ned_13_index.json)
+**NOTE:** `ned_13_index.json` file contains the index of all the DEM files available in the NED database. You can download the DEM files by providing the tile name can be found [here](https://github.com/TaskarCenterAtUW/TDEI-python-lib-osw-inclination/blob/main/ned_13_index.json)
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](https://github.com/TaskarCenterAtUW/TDEI-python-lib-osw-inclination/blob/main/LICENSE) file for details
