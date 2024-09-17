@@ -3,6 +3,7 @@ from typing import List
 from pathlib import Path
 from .logger import Logger
 from .osm_graph import OSMGraph
+from .version import __version__
 from .dem_processor import DEMProcessor
 
 class OSWIncline:
@@ -45,3 +46,4 @@ class OSWIncline:
 
 
 
+OSWIncline.__version__ = __version__
