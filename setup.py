@@ -27,7 +27,7 @@ setup(
     long_description_content_type='text/markdown',
     url='https://github.com/TaskarCenterAtUW/TDEI-python-lib-osw-inclination',
     install_requires=[
-        'pyproj'
+        'pyproj',
         'networkx',
         'shapely',
         'rasterio',
