@@ -13,7 +13,7 @@ with open('README.md', 'r') as fh:
     long_description = fh.read()
 
 setup(
-    name='osm-incline',
+    name='osw-incline',
     version=version,
     author='Sujata Misra',
     author_email='sujatam@gaussiansolutions.com',
