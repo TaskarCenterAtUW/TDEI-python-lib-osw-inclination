@@ -1,5 +1,3 @@
-from networkx import nodes
-
 # OSW-Incline Package
 OSW-Incline is a Python library for calculating the incline of geographical features based on Digital Elevation Models (DEM) and OpenStreetMap (OSM) data. The library processes DEM files and calculates inclines for each edge in a provided OSM graph (GeoJSON format).
 
