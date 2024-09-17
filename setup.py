@@ -22,7 +22,7 @@ setup(
     project_urls={
         'Documentation': 'https://github.com/TaskarCenterAtUW/TDEI-python-lib-osw-inclination/blob/main/README.md',
         'GitHub': 'https://github.com/TaskarCenterAtUW/TDEI-python-lib-osw-inclination',
-        'Changelog': 'https://github.com/TaskarCenterAtUW/TDEI-python-lib-osw-inclination/blob/develop/CHANGELOG.md'
+        'Changelog': 'https://github.com/TaskarCenterAtUW/TDEI-python-lib-osw-inclination/blob/main/CHANGELOG.md'
     },
     long_description_content_type='text/markdown',
     url='https://github.com/TaskarCenterAtUW/TDEI-python-lib-osw-inclination',
