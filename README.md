@@ -55,7 +55,7 @@ if result:
 
 ## API Reference
 
-### `OSWIncline`
+### OSWIncline
 
 `__init__(dem_files: List[str], nodes_file: str, edges_file: str, debug: bool = False)`
 
