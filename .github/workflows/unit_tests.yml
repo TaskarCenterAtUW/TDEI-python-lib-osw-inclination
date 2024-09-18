@@ -1,0 +1,35 @@
+name: Unit Tests
+on:
+  workflow_dispatch:
+  push:
+    branches-ignore:
+      - '**'
+  pull_request:
+    branches: [main, dev, stage]
+
+jobs:
+  UnitTest:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run tests with coverage
+      run: |
+        coverage run --source=src -m unittest discover -s tests/
+        coverage xml  
+
+    - name: Check coverage
+      run: |
+        coverage report --fail-under=85
