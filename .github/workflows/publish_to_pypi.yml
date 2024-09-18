@@ -1,0 +1,58 @@
+name: Check and Publish to PyPi
+on:
+  push:
+    tags:
+      - '*.*.*' # Eg. 0.0.1
+  workflow_dispatch:
+
+jobs:
+  PublishToPyPi:
+    environment:
+      name: Production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Installing python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Installing git
+        run: pip install gitpython
+
+      - name: Installing Packages
+        run: pip install -r requirements.txt
+
+      - name: Generate local version
+        run: python freeze_version.py
+
+      - name: Fetch local package version
+        run: |
+          packageLocalVersion=$(python -c 'from version import version; print(version);')
+          echo "localVersion=$packageLocalVersion" >> $GITHUB_ENV
+
+      - name: Fetch remote package version
+        run: |
+          packageRemoteVersion=$(python -c "exec(\"import pkg_resources\\ntry:  print(pkg_resources.get_distribution('osw-incline').version)\\n except pkg_resources.DistributionNotFound:  print('0.0.0');\")")
+          echo "remoteVersion=$packageRemoteVersion" >> $GITHUB_ENV
+
+      - name: Printing local and remote versions
+        run: echo "Local version ${{env.localVersion}} and remote version ${{env.remoteVersion}}"
+
+      - name: Compare local and remote version with dpkg
+        run: dpkg --compare-versions ${{env.localVersion}} "gt" ${{env.remoteVersion}}
+
+
+      - name: Setup python wheel
+        run: pip install wheel
+
+      - name: Building Package
+        run: python setup.py bdist_wheel
+
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+
