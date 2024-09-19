@@ -30,12 +30,18 @@ jobs:
 
       - name: Fetch local package version
         run: |
-          packageLocalVersion=$(python -c 'from version import version; print(version);')
+          packageLocalVersion=$(python -c 'from version import version; print(version)')
           echo "localVersion=$packageLocalVersion" >> $GITHUB_ENV
 
       - name: Fetch remote package version
         run: |
-          packageRemoteVersion=$(python -c "exec(\"import pkg_resources\\n try: print(pkg_resources.get_distribution('osw-incline').version)\\n except pkg_resources.DistributionNotFound: print('0.0.0')\\n finally: print('Done checking version')\")")
+          packageRemoteVersion=$(python -c "
+          import pkg_resources 
+          try:
+            print(pkg_resources.get_distribution('osw-incline').version)
+          except pkg_resources.DistributionNotFound:
+            print('0.0.0')
+          ")
           echo "remoteVersion=$packageRemoteVersion" >> $GITHUB_ENV
 
       - name: Printing local and remote versions
@@ -49,7 +55,6 @@ jobs:
             exit 1
           fi
 
-
       - name: Setup python wheel
         run: pip install wheel
 
@@ -60,4 +65,3 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
-
