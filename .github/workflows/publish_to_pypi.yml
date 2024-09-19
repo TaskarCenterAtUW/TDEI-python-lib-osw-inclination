@@ -35,14 +35,19 @@ jobs:
 
       - name: Fetch remote package version
         run: |
-          packageRemoteVersion=$(python -c "exec(\"import pkg_resources\\ntry:  print(pkg_resources.get_distribution('osw-incline').version)\\n except pkg_resources.DistributionNotFound:  print('0.0.0');\")")
+          packageRemoteVersion=$(python -c "exec(\"import pkg_resources\\n try: print(pkg_resources.get_distribution('osw-incline').version)\\n except pkg_resources.DistributionNotFound: print('0.0.0')\\n finally: print('Done checking version')\")")
           echo "remoteVersion=$packageRemoteVersion" >> $GITHUB_ENV
 
       - name: Printing local and remote versions
         run: echo "Local version ${{env.localVersion}} and remote version ${{env.remoteVersion}}"
 
-      - name: Compare local and remote version with dpkg
-        run: dpkg --compare-versions ${{env.localVersion}} "gt" ${{env.remoteVersion}}
+      - name: Compare local and remote versions
+        run: |
+          echo "Comparing versions..."
+          if dpkg --compare-versions ${{env.localVersion}} "le" ${{env.remoteVersion}}; then
+            echo "The remote version (${{env.remoteVersion}}) is greater than or equal to the local version (${{env.localVersion}}). Aborting deployment."
+            exit 1
+          fi
 
 
       - name: Setup python wheel
