@@ -1,3 +1,4 @@
+import gc
 import math
 import pyproj
 import rasterio
@@ -39,6 +40,7 @@ class DEMProcessor:
                             if self.debug:
                                 Logger.info(f'No geometry found for edge {u}-{v}')
 
+                dem.close()
                 self.OG.to_geojson(nodes_path, edges_path)
             except rasterio.errors.RasterioIOError:
                 if self.debug:
@@ -48,6 +50,11 @@ class DEMProcessor:
                 if self.debug:
                     Logger.error(f'Error processing DEM file: {dem_file_path}, error: {e}')
                 raise Exception(f'Error processing DEM file: {dem_file_path}, error: {e}')
+            finally:
+                gc.collect()
+
+        del self.OG
+        gc.collect()
 
     def infer_incline(self, linestring, dem, precision=3):
         first_point = linestring.coords[0]

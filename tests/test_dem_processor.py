@@ -401,7 +401,6 @@ class TestDEMProcessor(unittest.TestCase):
 
         # Assert that the result is not None and that it is scaled properly
         self.assertIsNotNone(result, 'IDW interpolation should return a valid value')
-        print(f"IDW Interpolated Value (scaled): {result}")
 
         # You can adjust the expected result based on the IDW logic; here, just check that it's non-zero
         self.assertGreater(result, 0, 'The interpolated result should be greater than 0')

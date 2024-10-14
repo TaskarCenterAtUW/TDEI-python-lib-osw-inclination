@@ -1,3 +1,4 @@
+import gc
 import json
 import pyproj
 import networkx as nx
@@ -36,11 +37,24 @@ class OSMGraph:
             props['geometry'] = shape(edge_feature['geometry'])
             G.add_edge(u, v, **props)
 
+        del nodes_fc
+        del edges_fc
+        gc.collect()
+
         return osm_graph
 
     def to_geojson(self, *args):
         nodes_path = args[0]
         edges_path = args[1]
+
+        # Load the original files to retain the original top-level keys
+        with open(nodes_path) as f:
+            original_nodes_fc = json.load(f)
+
+        with open(edges_path) as f:
+            original_edges_fc = json.load(f)
+
+        # Process the edges
         edge_features = []
         for u, v, d in self.G.edges(data=True):
             d_copy = {**d}
@@ -58,8 +72,11 @@ class OSMGraph:
                 'geometry': geometry,
                 'properties': d_copy
             })
-        edges_fc = {'type': 'FeatureCollection', 'features': edge_features}
 
+        # Update the original edges feature collection
+        original_edges_fc['features'] = edge_features
+
+        # Process the nodes
         node_features = []
         for n, d in self.G.nodes(data=True):
             d_copy = {**d}
@@ -82,14 +99,18 @@ class OSMGraph:
                     'geometry': geometry,
                     'properties': d_copy
                 })
-        nodes_fc = {'type': 'FeatureCollection', 'features': node_features}
 
+        # Update the original nodes feature collection
+        original_nodes_fc['features'] = node_features
+
+        # Write the updated nodes and edges to the files
         with open(edges_path, 'w') as f:
-            json.dump(edges_fc, f)
+            json.dump(original_edges_fc, f)
 
         with open(nodes_path, 'w') as f:
-            json.dump(nodes_fc, f)
+            json.dump(original_nodes_fc, f)
 
+        # Handle points if the third argument (points_path) is provided
         if len(args) == 3:
             points_path = args[2]
             point_features = []
@@ -116,7 +137,10 @@ class OSMGraph:
                         'geometry': geometry,
                         'properties': d_copy
                     })
-            points_fc = {'type': 'FeatureCollection', 'features': point_features}
 
             with open(points_path, 'w') as f:
-                json.dump(points_fc, f)
+                json.dump({'type': 'FeatureCollection', 'features': point_features}, f)
+
+        del original_nodes_fc
+        del original_edges_fc
+        gc.collect()

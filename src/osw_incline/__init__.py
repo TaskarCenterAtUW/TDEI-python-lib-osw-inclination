@@ -1,3 +1,4 @@
+import gc
 import time
 from typing import List
 from pathlib import Path
@@ -36,6 +37,8 @@ class OSWIncline:
             )
             end_time = time.time()
             time_taken = end_time - start_time
+            del osm_graph
+            del dem_processor
             if self.debug:
                 Logger.info(f'Entire processing took: {time_taken} seconds')
             return True
@@ -43,6 +46,8 @@ class OSWIncline:
             if self.debug:
                 Logger.error(f'Error processing DEM files: {e}')
             raise Exception(f'Error processing DEM files: {e}')
+        finally:
+            gc.collect()
 
 
 
