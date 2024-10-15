@@ -17,7 +17,7 @@ class OSWIncline:
         if self.debug:
             Logger.debug('Debug mode is enabled')
 
-    def calculate(self):
+    def calculate(self, skip_existing_tags=False, batch_processing=False):
         try:
             if self.debug:
                 Logger.debug('Starting calculation process')
@@ -33,10 +33,13 @@ class OSWIncline:
             dem_processor = DEMProcessor(osm_graph=osm_graph, dem_files=self.dem_files, debug=self.debug)
             dem_processor.process(
                 nodes_path=graph_nodes_path,
-                edges_path=graph_edges_path
+                edges_path=graph_edges_path,
+                skip_existing_tags=skip_existing_tags,
+                batch_processing=batch_processing
             )
 
             # Delete osm_graph and dem_processor to force garbage collection
+            osm_graph.clean()
             del osm_graph, dem_processor
             gc.collect()
 

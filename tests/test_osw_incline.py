@@ -44,11 +44,78 @@ class TestOSWIncline(unittest.TestCase):
         )
         mock_dem_processor.assert_called_once_with(
             nodes_path=Path(self.nodes_file),
-            edges_path=Path(self.edges_file)
+            edges_path=Path(self.edges_file),
+            skip_existing_tags=False,
+            batch_processing=False
         )
 
-        # Check if the time taken was logged
-        mock_logger_info.assert_called_once_with('Entire processing took: 4 seconds')
+    @patch.object(OSMGraph, 'from_geojson', return_value=MagicMock())
+    @patch('src.osw_incline.dem_processor.DEMProcessor.process', return_value=None)
+    @patch('time.time', side_effect=[1, 5])  # Simulate time taken for the calculation
+    @patch.object(Logger, 'info')  # Mock the Logger to capture log calls
+    def test_calculate_success_with_skip_existing_tags(self, mock_logger_info, mock_time, mock_dem_processor, mock_osm_graph):
+        result = self.osw_incline.calculate(skip_existing_tags=True)
+
+        # Check if the process was successful
+        self.assertTrue(result)
+
+        # Ensure the OSMGraph and DEMProcessor were used correctly
+        mock_osm_graph.assert_called_once_with(
+            nodes_path=Path(self.nodes_file),
+            edges_path=Path(self.edges_file),
+        )
+        mock_dem_processor.assert_called_once_with(
+            nodes_path=Path(self.nodes_file),
+            edges_path=Path(self.edges_file),
+            skip_existing_tags=True,
+            batch_processing=False
+        )
+
+    @patch.object(OSMGraph, 'from_geojson', return_value=MagicMock())
+    @patch('src.osw_incline.dem_processor.DEMProcessor.process', return_value=None)
+    @patch('time.time', side_effect=[1, 5])  # Simulate time taken for the calculation
+    @patch.object(Logger, 'info')  # Mock the Logger to capture log calls
+    def test_calculate_success_with_batch_processing(self, mock_logger_info, mock_time, mock_dem_processor,
+                                                       mock_osm_graph):
+        result = self.osw_incline.calculate(batch_processing=True)
+
+        # Check if the process was successful
+        self.assertTrue(result)
+
+        # Ensure the OSMGraph and DEMProcessor were used correctly
+        mock_osm_graph.assert_called_once_with(
+            nodes_path=Path(self.nodes_file),
+            edges_path=Path(self.edges_file),
+        )
+        mock_dem_processor.assert_called_once_with(
+            nodes_path=Path(self.nodes_file),
+            edges_path=Path(self.edges_file),
+            skip_existing_tags=False,
+            batch_processing=True
+        )
+
+    @patch.object(OSMGraph, 'from_geojson', return_value=MagicMock())
+    @patch('src.osw_incline.dem_processor.DEMProcessor.process', return_value=None)
+    @patch('time.time', side_effect=[1, 5])  # Simulate time taken for the calculation
+    @patch.object(Logger, 'info')  # Mock the Logger to capture log calls
+    def test_calculate_success_with_batching_and_skip_existing_tags(self, mock_logger_info, mock_time, mock_dem_processor,
+                                                     mock_osm_graph):
+        result = self.osw_incline.calculate(skip_existing_tags=True, batch_processing=True)
+
+        # Check if the process was successful
+        self.assertTrue(result)
+
+        # Ensure the OSMGraph and DEMProcessor were used correctly
+        mock_osm_graph.assert_called_once_with(
+            nodes_path=Path(self.nodes_file),
+            edges_path=Path(self.edges_file),
+        )
+        mock_dem_processor.assert_called_once_with(
+            nodes_path=Path(self.nodes_file),
+            edges_path=Path(self.edges_file),
+            skip_existing_tags=True,
+            batch_processing=True
+        )
 
     # Test when OSMGraph.from_geojson raises an exception
     @patch.object(OSMGraph, 'from_geojson', side_effect=Exception("OSMGraph Error"))

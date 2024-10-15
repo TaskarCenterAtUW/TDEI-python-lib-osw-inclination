@@ -152,3 +152,7 @@ class OSMGraph:
             # Delete point_features and force garbage collection
             del point_features, points_fc
             gc.collect()
+
+    def clean(self):
+        del self.G
+        gc.collect()

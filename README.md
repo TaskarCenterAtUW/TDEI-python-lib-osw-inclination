@@ -47,6 +47,12 @@ osw_incline = OSWIncline(
 # Perform the incline calculation, it will add the incline to the  original edges file 
 result = osw_incline.calculate()
 
+# To skip the incline tags which are already present in the edges file
+result = osw_incline.calculate(skip_existing_tags=True)
+
+# To update the incline tags in batch processing (It might be faster than the normal calculation but increases the memory usage)
+result = osw_incline.calculate(batch_processing=True)
+
 if result:
     print("Incline calculation completed successfully.")
 ```

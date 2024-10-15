@@ -22,7 +22,7 @@ class DEMProcessor:
         self.OG = osm_graph
         self.debug = debug
 
-    def process(self, nodes_path, edges_path):
+    def process(self, nodes_path, edges_path, skip_existing_tags=False, batch_processing=False):
         gc.disable()
         for dem_file in self.dem_files:
             dem_file_path = Path(dem_file)
@@ -31,8 +31,41 @@ class DEMProcessor:
 
             try:
                 with rasterio.open(dem_file_path) as dem:
-                    edges = list(self.OG.G.edges(data=True))  # Get all edges, even if fewer than batch_size
-                    self._process_in_batches(edges, dem, batch_size=1000)
+                    """
+                    Option 1:
+                        Pros:
+                            Batching: This approach processes edges in batches of 1000, which can be faster for large graphs.
+                            Parallelization: The second approach can be parallelized by using a ThreadPoolExecutor or similar.
+                        Cons:
+                            Memory usage: The second approach stores all edges in a list, which could be memory-intensive for large graphs.
+                            Intermediate list storage: The second approach stores the entire edge set as a list in memory, which is not memory-efficient.
+                    """
+                    if batch_processing:
+                        edges = list(self.OG.G.edges(data=True))  # Get all edges, even if fewer than batch_size
+                        self._process_in_batches(edges, dem, batch_size=1000, skip_existing_tags=skip_existing_tags)
+                    else:
+                        """
+                        Option 2:
+                            Pros:
+                                Simple iteration: The first approach iterates over the edges one by one, making the memory footprint relatively small, especially if you have a large number of edges.
+                                No intermediate list storage: It does not store the entire edge set as a list in memory, which is better for memory efficiency.
+                            Cons:
+                                Single-threaded: The entire edge processing happens sequentially, which can be slower for very large graphs, as there's no batching or parallelization.
+                                No batching: It processes all edges at once in a loop, which could cause memory spikes during large computations if infer_incline holds intermediate states or large datasets.
+                        """
+                        for u, v, d in self.OG.G.edges(data=True):
+                            if 'geometry' in d:
+                                if skip_existing_tags:
+                                    if 'incline' in d and d['incline'] is not None:
+                                        # If incline already exists, skip
+                                        continue
+                                incline = self.infer_incline(linestring=d['geometry'], dem=dem, precision=3)
+                                if incline is not None:
+                                    # Add incline to the edge properties
+                                    d['incline'] = incline
+                            else:
+                                if self.debug:
+                                    Logger.info(f'No geometry found for edge {u}-{v}')
 
                 self.OG.to_geojson(nodes_path, edges_path)
             except rasterio.errors.RasterioIOError:
@@ -48,12 +81,16 @@ class DEMProcessor:
 
         gc.disable()
 
-    def _process_in_batches(self, edges, dem, batch_size=1000):
+    def _process_in_batches(self, edges, dem, batch_size=1000, skip_existing_tags=False):
         # Process edges in batches
         for i in range(0, len(edges), batch_size):
             batch = edges[i:i + batch_size]
             for u, v, d in batch:
                 if 'geometry' in d:
+                    if skip_existing_tags:
+                        if 'incline' in d and d['incline'] is not None:
+                            # If incline already exists, skip
+                            continue
                     incline = self.infer_incline(linestring=d['geometry'], dem=dem, precision=3)
                     if incline is not None:
                         d['incline'] = incline
