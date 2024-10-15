@@ -256,6 +256,12 @@ class TestOSMGraph(unittest.TestCase):
             nodes_data = json.load(f)
             self.assertEqual(len(nodes_data['features']), 0)
 
+    def test_clean(self):
+        osm_graph = OSMGraph.from_geojson(self.nodes_geojson, self.edges_geojson)
+        self.assertEqual(len(osm_graph.G.nodes), 3)
+        osm_graph.clean()
+        self.assertFalse(hasattr(osm_graph, 'G'))
+
 
 if __name__ == '__main__':
     unittest.main()
