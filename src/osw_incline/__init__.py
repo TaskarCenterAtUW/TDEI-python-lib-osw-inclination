@@ -7,6 +7,7 @@ from .osm_graph import OSMGraph
 from .version import __version__
 from .dem_processor import DEMProcessor
 
+
 class OSWIncline:
     def __init__(self, dem_files: List[str], nodes_file: str, edges_file: str, debug=False):
         self.dem_files = dem_files
@@ -15,7 +16,6 @@ class OSWIncline:
         self.debug = debug
         if self.debug:
             Logger.debug('Debug mode is enabled')
-
 
     def calculate(self):
         try:
@@ -35,10 +35,13 @@ class OSWIncline:
                 nodes_path=graph_nodes_path,
                 edges_path=graph_edges_path
             )
+
+            # Delete osm_graph and dem_processor to force garbage collection
+            del osm_graph, dem_processor
+            gc.collect()
+
             end_time = time.time()
             time_taken = end_time - start_time
-            del osm_graph
-            del dem_processor
             if self.debug:
                 Logger.info(f'Entire processing took: {time_taken} seconds')
             return True
@@ -48,7 +51,6 @@ class OSWIncline:
             raise Exception(f'Error processing DEM files: {e}')
         finally:
             gc.collect()
-
 
 
 OSWIncline.__version__ = __version__
