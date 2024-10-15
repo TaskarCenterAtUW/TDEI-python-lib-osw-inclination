@@ -1,8 +1,10 @@
+import gc
 import json
 import pyproj
 import networkx as nx
 from shapely.geometry import shape, mapping
 
+SCHEMA = 'https://sidewalks.washington.edu/opensidewalks/0.2/schema.json'
 
 class OSMGraph:
     def __init__(self, G=None):
@@ -29,12 +31,18 @@ class OSMGraph:
             props['geometry'] = shape(node_feature['geometry'])
             G.add_node(n, **props)
 
+        del nodes_fc
+        gc.collect()
+
         for edge_feature in edges_fc['features']:
             props = edge_feature['properties']
             u = props.pop('_u_id')
             v = props.pop('_v_id')
             props['geometry'] = shape(edge_feature['geometry'])
             G.add_edge(u, v, **props)
+
+        del edges_fc
+        gc.collect()
 
         return osm_graph
 
@@ -58,7 +66,18 @@ class OSMGraph:
                 'geometry': geometry,
                 'properties': d_copy
             })
-        edges_fc = {'type': 'FeatureCollection', 'features': edge_features}
+        edges_fc = {
+            'type': 'FeatureCollection',
+            'features': edge_features,
+            '$schema': SCHEMA
+        }
+
+        with open(edges_path, 'w') as f:
+            json.dump(edges_fc, f)
+
+        # Delete edge_features and force garbage collection
+        del edge_features, edges_fc
+        gc.collect()
 
         node_features = []
         for n, d in self.G.nodes(data=True):
@@ -82,13 +101,18 @@ class OSMGraph:
                     'geometry': geometry,
                     'properties': d_copy
                 })
-        nodes_fc = {'type': 'FeatureCollection', 'features': node_features}
-
-        with open(edges_path, 'w') as f:
-            json.dump(edges_fc, f)
+        nodes_fc = {
+            'type': 'FeatureCollection',
+            'features': node_features,
+            '$schema': SCHEMA
+        }
 
         with open(nodes_path, 'w') as f:
             json.dump(nodes_fc, f)
+
+        # Delete node_features and force garbage collection
+        del node_features, nodes_fc
+        gc.collect()
 
         if len(args) == 3:
             points_path = args[2]
@@ -116,7 +140,19 @@ class OSMGraph:
                         'geometry': geometry,
                         'properties': d_copy
                     })
-            points_fc = {'type': 'FeatureCollection', 'features': point_features}
+            points_fc = {
+                'type': 'FeatureCollection',
+                'features': point_features,
+                '$schema': SCHEMA
+            }
 
             with open(points_path, 'w') as f:
                 json.dump(points_fc, f)
+
+            # Delete point_features and force garbage collection
+            del point_features, points_fc
+            gc.collect()
+
+    def clean(self):
+        del self.G
+        gc.collect()
