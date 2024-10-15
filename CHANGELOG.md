@@ -2,6 +2,8 @@
 - Fixed [Task-1347](https://dev.azure.com/TDEI-UW/TDEI/_workitems/edit/1347/).
 - Fixed package to removing the additional keys from the geojson files. 
 - Introduced garbage collection to free up memory.
+- Added ability to skip the tags which are already present in the edges file.
+- Added ability to process the incline tags in batch processing.
 
 
 ### 0.0.1

@@ -39,6 +39,28 @@ class TestDEMProcessor(unittest.TestCase):
 
         self.osm_graph.to_geojson.assert_called_once_with('nodes.json', 'edges.json')
 
+    @patch('src.osw_incline.dem_processor.rasterio.open')
+    def test_process_success_with_batching(self, mock_rasterio_open):
+        mock_dem = MagicMock()
+        mock_rasterio_open.return_value.__enter__.return_value = mock_dem
+        self.osm_graph.G.edges.return_value = [('u', 'v', {'geometry': LineString([(0, 0), (1, 1)])})]
+
+        with patch.object(self.processor, 'infer_incline', return_value=0.1):
+            self.processor.process('nodes.json', 'edges.json', batch_processing=True)
+
+        self.osm_graph.to_geojson.assert_called_once_with('nodes.json', 'edges.json')
+
+    @patch('src.osw_incline.dem_processor.rasterio.open')
+    def test_process_success_with_skip(self, mock_rasterio_open):
+        mock_dem = MagicMock()
+        mock_rasterio_open.return_value.__enter__.return_value = mock_dem
+        self.osm_graph.G.edges.return_value = [('u', 'v', {'geometry': LineString([(0, 0), (1, 1)])})]
+
+        with patch.object(self.processor, 'infer_incline', return_value=0.1):
+            self.processor.process('nodes.json', 'edges.json', skip_existing_tags=True)
+
+        self.osm_graph.to_geojson.assert_called_once_with('nodes.json', 'edges.json')
+
     # Test processing when RasterioIOError is raised
     @patch('src.osw_incline.dem_processor.rasterio.open')
     def test_process_rasterio_io_error(self, mock_rasterio_open):
