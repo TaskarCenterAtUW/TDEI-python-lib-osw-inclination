@@ -4,6 +4,7 @@ import pyproj
 import networkx as nx
 from shapely.geometry import shape, mapping
 
+SCHEMA = 'https://sidewalks.washington.edu/opensidewalks/0.2/schema.json'
 
 class OSMGraph:
     def __init__(self, G=None):
@@ -30,6 +31,9 @@ class OSMGraph:
             props['geometry'] = shape(node_feature['geometry'])
             G.add_node(n, **props)
 
+        del nodes_fc
+        gc.collect()
+
         for edge_feature in edges_fc['features']:
             props = edge_feature['properties']
             u = props.pop('_u_id')
@@ -37,7 +41,6 @@ class OSMGraph:
             props['geometry'] = shape(edge_feature['geometry'])
             G.add_edge(u, v, **props)
 
-        del nodes_fc
         del edges_fc
         gc.collect()
 
@@ -46,15 +49,6 @@ class OSMGraph:
     def to_geojson(self, *args):
         nodes_path = args[0]
         edges_path = args[1]
-
-        # Load the original files to retain the original top-level keys
-        with open(nodes_path) as f:
-            original_nodes_fc = json.load(f)
-
-        with open(edges_path) as f:
-            original_edges_fc = json.load(f)
-
-        # Process the edges
         edge_features = []
         for u, v, d in self.G.edges(data=True):
             d_copy = {**d}
@@ -72,11 +66,19 @@ class OSMGraph:
                 'geometry': geometry,
                 'properties': d_copy
             })
+        edges_fc = {
+            'type': 'FeatureCollection',
+            'features': edge_features,
+            '$schema': SCHEMA
+        }
 
-        # Update the original edges feature collection
-        original_edges_fc['features'] = edge_features
+        with open(edges_path, 'w') as f:
+            json.dump(edges_fc, f)
 
-        # Process the nodes
+        # Delete edge_features and force garbage collection
+        del edge_features, edges_fc
+        gc.collect()
+
         node_features = []
         for n, d in self.G.nodes(data=True):
             d_copy = {**d}
@@ -99,18 +101,19 @@ class OSMGraph:
                     'geometry': geometry,
                     'properties': d_copy
                 })
-
-        # Update the original nodes feature collection
-        original_nodes_fc['features'] = node_features
-
-        # Write the updated nodes and edges to the files
-        with open(edges_path, 'w') as f:
-            json.dump(original_edges_fc, f)
+        nodes_fc = {
+            'type': 'FeatureCollection',
+            'features': node_features,
+            '$schema': SCHEMA
+        }
 
         with open(nodes_path, 'w') as f:
-            json.dump(original_nodes_fc, f)
+            json.dump(nodes_fc, f)
 
-        # Handle points if the third argument (points_path) is provided
+        # Delete node_features and force garbage collection
+        del node_features, nodes_fc
+        gc.collect()
+
         if len(args) == 3:
             points_path = args[2]
             point_features = []
@@ -137,10 +140,15 @@ class OSMGraph:
                         'geometry': geometry,
                         'properties': d_copy
                     })
+            points_fc = {
+                'type': 'FeatureCollection',
+                'features': point_features,
+                '$schema': SCHEMA
+            }
 
             with open(points_path, 'w') as f:
-                json.dump({'type': 'FeatureCollection', 'features': point_features}, f)
+                json.dump(points_fc, f)
 
-        del original_nodes_fc
-        del original_edges_fc
-        gc.collect()
+            # Delete point_features and force garbage collection
+            del point_features, points_fc
+            gc.collect()

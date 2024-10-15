@@ -23,6 +23,7 @@ class DEMProcessor:
         self.debug = debug
 
     def process(self, nodes_path, edges_path):
+        gc.disable()
         for dem_file in self.dem_files:
             dem_file_path = Path(dem_file)
             if self.debug:
@@ -30,17 +31,9 @@ class DEMProcessor:
 
             try:
                 with rasterio.open(dem_file_path) as dem:
-                    for u, v, d in self.OG.G.edges(data=True):
-                        if 'geometry' in d:
-                            incline = self.infer_incline(linestring=d['geometry'], dem=dem, precision=3)
-                            if incline is not None:
-                                # Add incline to the edge properties
-                                d['incline'] = incline
-                        else:
-                            if self.debug:
-                                Logger.info(f'No geometry found for edge {u}-{v}')
+                    edges = list(self.OG.G.edges(data=True))  # Get all edges, even if fewer than batch_size
+                    self._process_in_batches(edges, dem, batch_size=1000)
 
-                dem.close()
                 self.OG.to_geojson(nodes_path, edges_path)
             except rasterio.errors.RasterioIOError:
                 if self.debug:
@@ -53,8 +46,19 @@ class DEMProcessor:
             finally:
                 gc.collect()
 
-        del self.OG
-        gc.collect()
+        gc.disable()
+
+    def _process_in_batches(self, edges, dem, batch_size=1000):
+        # Process edges in batches
+        for i in range(0, len(edges), batch_size):
+            batch = edges[i:i + batch_size]
+            for u, v, d in batch:
+                if 'geometry' in d:
+                    incline = self.infer_incline(linestring=d['geometry'], dem=dem, precision=3)
+                    if incline is not None:
+                        d['incline'] = incline
+            # Trigger garbage collection after each batch
+            gc.collect()
 
     def infer_incline(self, linestring, dem, precision=3):
         first_point = linestring.coords[0]
@@ -161,6 +165,7 @@ class DEMProcessor:
 
         interpolated = interpolator(dx, dy, dem_arr)
 
+        del dem_arr
         if interpolated is None:
             return interpolated
         else:
@@ -194,6 +199,7 @@ class DEMProcessor:
 
         value = weighted_values.sum()
 
+        del xs, ys, values_masked, weighted_values
 
         if np.isnan(value):
             return None
