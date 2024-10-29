@@ -42,7 +42,7 @@ class DEMProcessor:
                     """
                     if batch_processing:
                         edges = list(self.OG.G.edges(data=True))  # Get all edges, even if fewer than batch_size
-                        self._process_in_batches(edges, dem, batch_size=1000, skip_existing_tags=skip_existing_tags)
+                        self._process_in_batches(edges, dem, batch_size=10000, skip_existing_tags=skip_existing_tags)
                     else:
                         """
                         Option 2:
@@ -57,10 +57,12 @@ class DEMProcessor:
                             if 'geometry' in d:
                                 if skip_existing_tags:
                                     if 'incline' in d and d['incline'] is not None:
+                                        if -1 <= d['incline'] <= 1:
+                                            del d['incline']
                                         # If incline already exists, skip
                                         continue
                                 incline = self.infer_incline(linestring=d['geometry'], dem=dem, precision=3)
-                                if incline is not None:
+                                if incline is not None and -1 <= incline <= 1:
                                     # Add incline to the edge properties
                                     d['incline'] = incline
                             else:
@@ -81,7 +83,7 @@ class DEMProcessor:
 
         gc.disable()
 
-    def _process_in_batches(self, edges, dem, batch_size=1000, skip_existing_tags=False):
+    def _process_in_batches(self, edges, dem, batch_size=10000, skip_existing_tags=False):
         # Process edges in batches
         for i in range(0, len(edges), batch_size):
             batch = edges[i:i + batch_size]
@@ -89,10 +91,12 @@ class DEMProcessor:
                 if 'geometry' in d:
                     if skip_existing_tags:
                         if 'incline' in d and d['incline'] is not None:
+                            if -1 <= d['incline'] <= 1:
+                                del d['incline']
                             # If incline already exists, skip
                             continue
                     incline = self.infer_incline(linestring=d['geometry'], dem=dem, precision=3)
-                    if incline is not None:
+                    if incline is not None and -1 <= incline <= 1:
                         d['incline'] = incline
             # Trigger garbage collection after each batch
             gc.collect()
