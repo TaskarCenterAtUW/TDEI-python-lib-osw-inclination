@@ -5,7 +5,7 @@ on:
     branches-ignore:
       - '**'
   pull_request:
-    branches: [main, dev, stage]
+    branches: [dev]
 
 jobs:
   UnitTest:
