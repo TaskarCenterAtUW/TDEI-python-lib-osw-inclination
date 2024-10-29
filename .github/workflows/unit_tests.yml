@@ -5,7 +5,7 @@ on:
     branches-ignore:
       - '**'
   pull_request:
-    branches: [main, dev, stage]
+    branches: [dev]
 
 jobs:
   UnitTest:
@@ -27,7 +27,7 @@ jobs:
 
     - name: Run tests with coverage
       run: |
-        coverage run --source=src -m unittest discover -s tests/
+        coverage run --source=src/osw_incline -m unittest discover -s tests/
         coverage xml  
 
     - name: Check coverage
