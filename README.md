@@ -99,7 +99,7 @@ OSW-Incline includes a suite of unit tests to ensure correct functionality. You 
 python -m unittest discover -v tests
 
 # To run the unit test cases with coverage
-python -m coverage run --source=src -m unittest discover -v tests
+python -m coverage run --source=src/osw_incline -m unittest discover -v tests
 
 # To generate the coverage report
 python -m coverage report
