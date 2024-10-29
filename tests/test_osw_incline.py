@@ -1,14 +1,14 @@
 import json
-import shutil
-import zipfile
 import unittest
 from pathlib import Path
 from src.osw_incline import OSWIncline
 from src.osw_incline.logger import Logger
 from unittest.mock import patch, MagicMock
 from src.osw_incline.osm_graph import OSMGraph
+from src.utils import download_dems, unzip_dataset, remove_unzip_dataset
 
 ASSETS_DIR = f'{Path.cwd()}/tests/assets'
+DEM_DIR = f'{Path.cwd()}/downloads/dems'
 
 
 class TestOSWIncline(unittest.TestCase):
@@ -178,28 +178,41 @@ class TestOSWIncline(unittest.TestCase):
 
 class TestOSWInclineIntegration(unittest.TestCase):
     def setUp(self):
-        self.dem_files = [f'{ASSETS_DIR}/dems/n48w123.tif']
-        zip_path = f'{ASSETS_DIR}/medium.zip'
-        self.extract_to = f'{ASSETS_DIR}/medium'
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            zip_ref.extractall(self.extract_to)
+        file_path = Path(f'{DEM_DIR}/n48w123.tif')
+
+        # Download DEM file if not present
+        download_dems()
+
+        self.dem_files = [str(file_path)]
+        unzip_dataset()
+        self.extract_to = Path(f'{ASSETS_DIR}/medium')
+        self.nodes_file = f'{self.extract_to}/wa.seattle.graph.nodes.geojson'
+        self.edges_file = f'{self.extract_to}/wa.seattle.graph.edges.geojson'
 
     def tearDown(self):
-        path = Path(self.extract_to)
-        shutil.rmtree(path, ignore_errors=True)
+        remove_unzip_dataset()
 
-    # def test_entire_process(self):
-    #     nodes_file = f'{ASSETS_DIR}/medium/wa.seattle.graph.nodes.geojson'
-    #     edges_file = f'{ASSETS_DIR}/medium/wa.seattle.graph.edges.geojson'
-    #     incline = OSWIncline(dem_files=self.dem_files, nodes_file=nodes_file, edges_file=edges_file, debug=True)
-    #     result = incline.calculate()
-    #     self.assertTrue(result)
+    def test_entire_process(self):
+
+        incline = OSWIncline(
+            dem_files=self.dem_files,
+            nodes_file=str(self.nodes_file),
+            edges_file=str(self.edges_file),
+            debug=True
+        )
+        result = incline.calculate()
+        self.assertTrue(result)
 
     def test_incline_tag_added(self):
         # Run incline calculation
         nodes_file = f'{ASSETS_DIR}/medium/wa.seattle.graph.nodes.geojson'
         edges_file = f'{ASSETS_DIR}/medium/wa.seattle.graph.edges.geojson'
-        incline = OSWIncline(dem_files=self.dem_files, nodes_file=nodes_file, edges_file=edges_file, debug=True)
+        incline = OSWIncline(
+            dem_files=self.dem_files,
+            nodes_file=self.nodes_file,
+            edges_file=self.edges_file,
+            debug=True
+        )
         result = incline.calculate()
         self.assertTrue(result)
         # Load the edges file to check for "incline" tag in each edge
