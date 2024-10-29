@@ -1,9 +1,14 @@
+import json
+import shutil
+import zipfile
 import unittest
 from pathlib import Path
 from src.osw_incline import OSWIncline
 from src.osw_incline.logger import Logger
 from unittest.mock import patch, MagicMock
 from src.osw_incline.osm_graph import OSMGraph
+
+ASSETS_DIR = f'{Path.cwd()}/tests/assets'
 
 
 class TestOSWIncline(unittest.TestCase):
@@ -53,7 +58,8 @@ class TestOSWIncline(unittest.TestCase):
     @patch('src.osw_incline.dem_processor.DEMProcessor.process', return_value=None)
     @patch('time.time', side_effect=[1, 5])  # Simulate time taken for the calculation
     @patch.object(Logger, 'info')  # Mock the Logger to capture log calls
-    def test_calculate_success_with_skip_existing_tags(self, mock_logger_info, mock_time, mock_dem_processor, mock_osm_graph):
+    def test_calculate_success_with_skip_existing_tags(self, mock_logger_info, mock_time, mock_dem_processor,
+                                                       mock_osm_graph):
         result = self.osw_incline.calculate(skip_existing_tags=True)
 
         # Check if the process was successful
@@ -76,7 +82,7 @@ class TestOSWIncline(unittest.TestCase):
     @patch('time.time', side_effect=[1, 5])  # Simulate time taken for the calculation
     @patch.object(Logger, 'info')  # Mock the Logger to capture log calls
     def test_calculate_success_with_batch_processing(self, mock_logger_info, mock_time, mock_dem_processor,
-                                                       mock_osm_graph):
+                                                     mock_osm_graph):
         result = self.osw_incline.calculate(batch_processing=True)
 
         # Check if the process was successful
@@ -98,8 +104,9 @@ class TestOSWIncline(unittest.TestCase):
     @patch('src.osw_incline.dem_processor.DEMProcessor.process', return_value=None)
     @patch('time.time', side_effect=[1, 5])  # Simulate time taken for the calculation
     @patch.object(Logger, 'info')  # Mock the Logger to capture log calls
-    def test_calculate_success_with_batching_and_skip_existing_tags(self, mock_logger_info, mock_time, mock_dem_processor,
-                                                     mock_osm_graph):
+    def test_calculate_success_with_batching_and_skip_existing_tags(self, mock_logger_info, mock_time,
+                                                                    mock_dem_processor,
+                                                                    mock_osm_graph):
         result = self.osw_incline.calculate(skip_existing_tags=True, batch_processing=True)
 
         # Check if the process was successful
@@ -167,6 +174,44 @@ class TestOSWIncline(unittest.TestCase):
 
         # Check if the debug log was called on initialization
         mock_logger_debug.assert_called_once_with('Debug mode is enabled')
+
+
+class TestOSWInclineIntegration(unittest.TestCase):
+    def setUp(self):
+        self.dem_files = [f'{ASSETS_DIR}/dems/n48w123.tif']
+        zip_path = f'{ASSETS_DIR}/medium.zip'
+        self.extract_to = f'{ASSETS_DIR}/medium'
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(self.extract_to)
+
+    def tearDown(self):
+        path = Path(self.extract_to)
+        shutil.rmtree(path, ignore_errors=True)
+
+    # def test_entire_process(self):
+    #     nodes_file = f'{ASSETS_DIR}/medium/wa.seattle.graph.nodes.geojson'
+    #     edges_file = f'{ASSETS_DIR}/medium/wa.seattle.graph.edges.geojson'
+    #     incline = OSWIncline(dem_files=self.dem_files, nodes_file=nodes_file, edges_file=edges_file, debug=True)
+    #     result = incline.calculate()
+    #     self.assertTrue(result)
+
+    def test_incline_tag_added(self):
+        # Run incline calculation
+        nodes_file = f'{ASSETS_DIR}/medium/wa.seattle.graph.nodes.geojson'
+        edges_file = f'{ASSETS_DIR}/medium/wa.seattle.graph.edges.geojson'
+        incline = OSWIncline(dem_files=self.dem_files, nodes_file=nodes_file, edges_file=edges_file, debug=True)
+        result = incline.calculate()
+        self.assertTrue(result)
+        # Load the edges file to check for "incline" tag in each edge
+        with open(edges_file, 'r') as f:
+            edges_data = json.load(f)
+
+        # Check that each edge has an "incline" tag and validate its presence
+        for feature in edges_data['features']:
+            if 'incline' in feature['properties']:
+                incline_value = feature['properties']['incline']
+                self.assertIsInstance(incline_value, (int, float), 'Incline should be an integer or float.')
+                self.assertTrue(-1 <= incline_value <= 1, 'Incline should be between -1 and 1.')
 
 
 if __name__ == '__main__':
