@@ -37,7 +37,7 @@ jobs:
             echo "output_folder=prod" >> $GITHUB_ENV
           elif [[ $branch_name == "stage" ]]; then
             echo "output_folder=stage" >> $GITHUB_ENV
-          elif [[ $branch_name == "develop" ]]; then
+          elif [[ $branch_name == "dev" ]]; then
             echo "output_folder=dev" >> $GITHUB_ENV
           else
             echo "Unknown branch: $branch_name"
