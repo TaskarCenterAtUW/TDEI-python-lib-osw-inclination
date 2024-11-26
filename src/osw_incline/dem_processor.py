@@ -57,7 +57,7 @@ class DEMProcessor:
                             if 'geometry' in d:
                                 if skip_existing_tags:
                                     if 'incline' in d and d['incline'] is not None:
-                                        if -1 <= d['incline'] <= 1:
+                                        if d['incline'] < -1 or d['incline'] > 1:
                                             del d['incline']
                                         # If incline already exists, skip
                                         continue
@@ -91,7 +91,7 @@ class DEMProcessor:
                 if 'geometry' in d:
                     if skip_existing_tags:
                         if 'incline' in d and d['incline'] is not None:
-                            if -1 <= d['incline'] <= 1:
+                            if d['incline'] < -1 or d['incline'] > 1:
                                 del d['incline']
                             # If incline already exists, skip
                             continue
