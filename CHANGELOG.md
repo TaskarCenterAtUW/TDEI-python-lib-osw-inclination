@@ -1,3 +1,7 @@
+### 0.0.4
+- Fixed [Task-1467](https://dev.azure.com/TDEI-UW/TDEI/_workitems/edit/1467/).
+- Updated pipeline to deploy the test results to Azure Blob
+
 ### 0.0.3
 
 - Fixed [Task-1369](https://dev.azure.com/TDEI-UW/TDEI/_workitems/edit/1369/).
