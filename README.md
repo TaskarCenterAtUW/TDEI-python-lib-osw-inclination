@@ -9,6 +9,7 @@ OSW-Incline is a Python library for calculating the incline of geographical feat
 - [Examples](#examples)
 - [Running Tests](#running-tests)
 - [How To Get DEM Files From NED Database](#how-to-get-dem-files-from-ned-database)
+- [Deployment of the Library](#deployment)
 - [License](#license)
 
 ## Features 
@@ -201,6 +202,26 @@ class DEMDownloader:
         return [Path(tif).stem for tif in dem_dir.glob('*.tif') if Path(tif).stem in self.ned_13_index]
 ```
 **NOTE:** `ned_13_index.json` file contains the index of all the DEM files available in the NED database. You can download the DEM files by providing the tile name can be found [here](https://github.com/TaskarCenterAtUW/TDEI-python-lib-osw-inclination/blob/main/ned_13_index.json)
+
+
+## Deployment
+
+- The library can be pushed to [TestPy](https://test.pypi.org/project/osw-incline/) or [PYPI](https://pypi.org/project/osw-incline/)
+### Deploy to TestPy
+- On every push to `dev` branch, a workflow is triggered which publishes the updated version to TestPy
+
+### Deploy to PyPI
+- This happens whenever a tag/release is created with `*.*.*` notation (eg. 0.0.8)
+- To change the version, change the version at [version.py](./src/osw_confidence_metric/version.py)
+- To release a new version:
+  - Go to Github link of this repository
+  - Under [releases](https://github.com/TaskarCenterAtUW/TDEI-python-lib-osw-inclination/releases), click on `Draft a new release`
+  - Under `choose a new tag`, add a new tag `v*.*.*` , Generate Release notes
+  - Choose `main` branch for release
+  - Publish the release.
+- This release triggers a workflow to generate the new version of the Package.
+- The new package will be available at https://pypi.org/project/osw-incline/
+
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](https://github.com/TaskarCenterAtUW/TDEI-python-lib-osw-inclination/blob/main/LICENSE) file for details
